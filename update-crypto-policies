@@ -94,15 +94,28 @@ fi
 
 . "$profile_dir/$profile"
 
-# Generate policy for GnuTLS
-touch $gnutls_config_file.tmp >/dev/null 2>&1
-if ! test -f $gnutls_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-echo -e "$CONFIG_GNUTLS" > $gnutls_config_file.tmp
+create_config () {
+	target=$1
+	content=$2
 
-# Test policy
+	touch $target >/dev/null 2>&1
+	if ! test -f $target;then
+		echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
+		exit 1
+	fi
+	echo -e "$content" > $target
+}
+
+# Generate policies
+create_config $gnutls_config_file.tmp "$CONFIG_GNUTLS"
+create_config $gnutls28_config_file.tmp "$CONFIG_GNUTLS28"
+create_config $bind_config_file.tmp "$CONFIG_BIND"
+create_config $java_config_file.tmp "$CONFIG_JAVA"
+create_config $openssl_config_file.tmp "$CONFIG_OPENSSL"
+create_config $nss_config_file.tmp "$CONFIG_NSS"
+create_config $krb5_config_file.tmp "$CONFIG_KRB5"
+
+# Test policies
 if test nocheck = 0 && test -x /usr/bin/gnutls-cli;then
 	gnutls-cli -l --priority `cat $gnutls_config_file.tmp|sed 's/SYSTEM=//g'` >/dev/null 2>&1
 	if test $? != 0;then
@@ -112,37 +125,6 @@ if test nocheck = 0 && test -x /usr/bin/gnutls-cli;then
 	fi
 fi
 
-# Generate policy for compat-gnutls28
-touch $gnutls28_config_file.tmp >/dev/null 2>&1
-if ! test -f $gnutls28_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-echo -e "$CONFIG_GNUTLS28" > $gnutls28_config_file.tmp
-
-# Generate policy for openssl
-touch $openssl_config_file.tmp >/dev/null 2>&1
-if ! test -f $openssl_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-echo -e "$CONFIG_OPENSSL" > $openssl_config_file.tmp 2>&1
-
-# Generate policy for NSS
-echo -e "$CONFIG_NSS" > $nss_config_file.tmp 2>&1
-if ! test -f $nss_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-
-# Generate policy for krb5
-echo -e "$CONFIG_KRB5" > $krb5_config_file.tmp 2>&1
-if ! test -f $krb5_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-
-# Test policies
 if test nocheck = 0 && test -x /usr/bin/openssl;then
 	openssl ciphers `cat $openssl_config_file.tmp` >/dev/null 2>&1
 	if test $? != 0;then
@@ -152,22 +134,6 @@ if test nocheck = 0 && test -x /usr/bin/openssl;then
 	fi
 fi
 
-# Generate policy for bind
-touch $bind_config_file.tmp >/dev/null 2>&1
-if ! test -f $bind_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-echo -e "$CONFIG_BIND" > $bind_config_file.tmp 2>&1
-
-touch $java_config_file.tmp >/dev/null 2>&1
-if ! test -f $java_config_file.tmp;then
-	echo "Cannot write to $backend_config_dir. This program requires administrator permissions."
-	exit 1
-fi
-echo -e "$CONFIG_JAVA" > $java_config_file.tmp 2>&1
-
-# Test policies
 if test nocheck = 0 && test -x /usr/sbin/named-checkconf;then
 	/usr/sbin/named-checkconf >/dev/null 2>&1
 	if test $? != 0;then
