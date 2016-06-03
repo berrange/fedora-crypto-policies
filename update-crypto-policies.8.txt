@@ -133,6 +133,9 @@ FILES
 /etc/crypto-policies/back-ends::
 	Contains the generated policies in separated files, and in a format readable by the supported back-ends.
 
+/etc/crypto-policies/local.d::
+	Contains local administrator additions, which are directly appended to the back-end config files when updated. The file names in this directory should match those in the back-ends directory and their content be in the back-end specific format.
+
 AUTHOR
 ------
 Written by Nikos Mavrogiannopoulos.

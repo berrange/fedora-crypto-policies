@@ -5,6 +5,7 @@ umask 022
 profile_dir=/usr/share/crypto-policies/profiles
 base_dir=/etc/crypto-policies
 backend_config_dir=$base_dir/back-ends
+local_config_dir=$base_dir/local.d
 state_dir=$base_dir/state
 errcode=0
 nocheck=0
@@ -45,13 +46,21 @@ fi
 mkdir -p $backend_config_dir >/dev/null 2>&1
 mkdir -p $state_dir >/dev/null 2>&1
 
-gnutls_config_file=$backend_config_dir/gnutls.config
-gnutls28_config_file=$backend_config_dir/gnutls28.config
-openssl_config_file=$backend_config_dir/openssl.config
-nss_config_file=$backend_config_dir/nss.config
-bind_config_file=$backend_config_dir/bind.config
-java_config_file=$backend_config_dir/java.config
-krb5_config_file=$backend_config_dir/krb5.config
+gnutls_config_name=gnutls.config
+gnutls28_config_name=gnutls28.config
+openssl_config_name=openssl.config
+nss_config_name=nss.config
+bind_config_name=bind.config
+java_config_name=java.config
+krb5_config_name=krb5.config
+
+gnutls_config_file=$backend_config_dir/$gnutls_config_name
+gnutls28_config_file=$backend_config_dir/$gnutls28_config_name
+openssl_config_file=$backend_config_dir/$openssl_config_name
+nss_config_file=$backend_config_dir/$nss_config_name
+bind_config_file=$backend_config_dir/$bind_config_name
+java_config_file=$backend_config_dir/$java_config_name
+krb5_config_file=$backend_config_dir/$krb5_config_name
 
 profile=$(cat $base_dir/config|grep -v ^#)
 
@@ -95,8 +104,11 @@ fi
 . "$profile_dir/$profile"
 
 create_config () {
-	target=$1
+	config=$1
 	content=$2
+
+	target=$backend_config_dir/$config.tmp
+	local=$local_config_dir/$config
 
 	touch $target >/dev/null 2>&1
 	if ! test -f $target;then
@@ -104,16 +116,20 @@ create_config () {
 		exit 1
 	fi
 	echo -e "$content" > $target
+
+	if test -e $local; then
+		cat $local >> $target
+	fi
 }
 
 # Generate policies
-create_config $gnutls_config_file.tmp "$CONFIG_GNUTLS"
-create_config $gnutls28_config_file.tmp "$CONFIG_GNUTLS28"
-create_config $bind_config_file.tmp "$CONFIG_BIND"
-create_config $java_config_file.tmp "$CONFIG_JAVA"
-create_config $openssl_config_file.tmp "$CONFIG_OPENSSL"
-create_config $nss_config_file.tmp "$CONFIG_NSS"
-create_config $krb5_config_file.tmp "$CONFIG_KRB5"
+create_config $gnutls_config_name "$CONFIG_GNUTLS"
+create_config $gnutls28_config_name "$CONFIG_GNUTLS28"
+create_config $bind_config_name "$CONFIG_BIND"
+create_config $java_config_name "$CONFIG_JAVA"
+create_config $openssl_config_name "$CONFIG_OPENSSL"
+create_config $nss_config_name "$CONFIG_NSS"
+create_config $krb5_config_name "$CONFIG_KRB5"
 
 # Test policies
 if test nocheck = 0 && test -x /usr/bin/gnutls-cli;then
